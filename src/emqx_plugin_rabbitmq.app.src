@@ -1,0 +1,7 @@
+{application,emqx_plugin_rabbitmq,
+             [{description,"EMQ X Plugin Rabbitmq"},
+              {vsn,"git"},
+              {modules,[]},
+              {registered,[emqx_plugin_rabbitmq_sup]},
+              {applications,[kernel,stdlib]},
+              {mod,{emqx_plugin_rabbitmq_app,[]}}]}.
