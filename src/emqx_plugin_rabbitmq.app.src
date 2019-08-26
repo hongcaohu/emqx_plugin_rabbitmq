@@ -3,5 +3,5 @@
               {vsn,"git"},
               {modules,[]},
               {registered,[emqx_plugin_rabbitmq_sup]},
-              {applications,[kernel,stdlib,amqp_client,ecpool,bson_erlang]},
+              {applications,[kernel,stdlib,amqp_client,ecpool,bson]},
               {mod,{emqx_plugin_rabbitmq_app,[]}}]}.
