@@ -12,8 +12,9 @@ start_link() ->
   supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 init([]) ->
-  application:set_env(amqp_client, prefer_ipv6, false),
-  {ok, PoolOpts} = application:get_env(?APP, server),
-  PoolSpec = ecpool:pool_spec(?APP, ?APP, emqx_plugin_rabbitmq_cli, PoolOpts),
-  {ok, {{one_for_one, 10, 100}, [PoolSpec]}}.
+	ok.
+  %% application:set_env(amqp_client, prefer_ipv6, false),
+  %% {ok, PoolOpts} = application:get_env(?APP, server),
+  %% PoolSpec = ecpool:pool_spec(?APP, ?APP, emqx_plugin_rabbitmq_cli, PoolOpts),
+  %% {ok, {{one_for_one, 10, 100}, [PoolSpec]}}.
 
