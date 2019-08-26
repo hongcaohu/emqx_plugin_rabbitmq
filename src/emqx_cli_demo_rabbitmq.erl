@@ -12,17 +12,13 @@
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
 
--module(emqx_plugin_rabbitmq_sup).
+-module(emqx_cli_demo_rabbitmq).
 
--behaviour(supervisor).
+-export([cmd/1]).
 
--export([start_link/0]).
+cmd(["arg1", "arg2"]) ->
+    emqx_cli:print("ok");
 
--export([init/1]).
-
-start_link() ->
-    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
-
-init([]) ->
-    {ok, { {one_for_all, 0, 1}, []} }.
+cmd(_) ->
+    emqx_cli:usage([{"cmd arg1 arg2", "cmd demo"}]).
 
