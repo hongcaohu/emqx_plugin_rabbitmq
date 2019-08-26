@@ -100,6 +100,8 @@ on_message_publish(Message = #message{topic = <<"$SYS/", _/binary>>}, _Env) ->
 
 on_message_publish(Message, _Env) ->
     io:format("Publish ~s~n", [emqx_message:format(Message)]),
+    {ok, Exchange} = application.get_env(emqx_plugin_rabbitmq, hook_rabbitmq_exchange),
+    io:format("Exchange ~s~n", [Exchange]),
     {ok, Message}.
 
 on_message_deliver(#{client_id := ClientId}, Message, _Env) ->
