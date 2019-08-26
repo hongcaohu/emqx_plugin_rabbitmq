@@ -20,11 +20,14 @@
 
 %% Called when the plugin application start
 load(_Env) ->
+  io:format("_Env ~s~n", [_Env]),
   {ok, ExchangeName} = application:get_env(?APP, exchange),
-  emqx_plugin_rabbitmq_cli:ensure_exchange(ExchangeName),
-  hookup('client.connected', client_connected, fun ?MODULE:on_client_connected/4, [ExchangeName]),
-  hookup('client.disconnected', client_disconnected, fun ?MODULE:on_client_disconnected/3, [ExchangeName]),
-  hookup('message.publish', message_publish, fun ?MODULE:on_message_publish/2, [ExchangeName]).
+  io:format("ExchangeName ~s~n", [ExchangeName]),
+  ok.
+  %% emqx_plugin_rabbitmq_cli:ensure_exchange(ExchangeName),
+  %% hookup('client.connected', client_connected, fun ?MODULE:on_client_connected/4, [ExchangeName]),
+  %% hookup('client.disconnected', client_disconnected, fun ?MODULE:on_client_disconnected/3, [ExchangeName]),
+  %% hookup('message.publish', message_publish, fun ?MODULE:on_message_publish/2, [ExchangeName]).
 
 on_client_connected(#{client_id := ClientId, username := Username}, ConnAck, ConnInfo, ExchangeName) ->
   {IpAddr, _Port} = maps:get(peername, ConnInfo),
