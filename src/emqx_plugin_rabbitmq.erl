@@ -48,7 +48,7 @@ load(Env) ->
 
     {ok, ExchangeName} = application:get_env(?APP, hook_rabbitmq_exchange),
     io:format("ExchangeName (load): ~s~n", [ExchangeName]),
-    io:format("emqx_message:format(Env) ~s~n", [emqx_message:format(Env)]),
+    %% io:format("emqx_message:format(Env) ~s~n", [emqx_message:format(Env)]),
     AmqpOpts = [%% Pool Size
           {pool_size, 10},
           {host, "47.99.55.196"},
@@ -56,7 +56,7 @@ load(Env) ->
           {username, "admin"},
           {password, "123456"}],
 
-    ecpool:start_pool(?APP, emqx_plugin_rabbitmq_cli, AmqpOpts),
+    ecpool:start_pool(amqp_pool, emqx_plugin_rabbitmq_cli, AmqpOpts),
     % emqx_plugin_rabbitmq_cli:ensure_exchange(ExchangeName),
 
     emqx:hook('client.authenticate', fun ?MODULE:on_client_authenticate/2, [Env]),
