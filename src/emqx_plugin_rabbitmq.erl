@@ -53,11 +53,11 @@ load(Env) ->
           {pool_size, 10},
           {host, "47.99.55.196"},
           {port, 5672},
-          {username, "admin"},
-          {password, "123456"}],
+          {username, <<"admin">>},
+          {password, <<"123456">>}],
 
-    ecpool:start_pool(amqp_pool, emqx_plugin_rabbitmq_cli, AmqpOpts),
-    % emqx_plugin_rabbitmq_cli:ensure_exchange(ExchangeName),
+    ecpool:start_pool(?APP, emqx_plugin_rabbitmq_cli, AmqpOpts),
+    emqx_plugin_rabbitmq_cli:ensure_exchange(ExchangeName),
 
     emqx:hook('client.authenticate', fun ?MODULE:on_client_authenticate/2, [Env]),
     emqx:hook('client.check_acl', fun ?MODULE:on_client_check_acl/5, [Env]),
@@ -70,7 +70,7 @@ load(Env) ->
     emqx:hook('session.subscribed', fun ?MODULE:on_session_subscribed/4, [Env]),
     emqx:hook('session.unsubscribed', fun ?MODULE:on_session_unsubscribed/4, [Env]),
     emqx:hook('session.terminated', fun ?MODULE:on_session_terminated/3, [Env]),
-    emqx:hook('message.publish', fun ?MODULE:on_message_publish/2, [Env]),
+    %% emqx:hook('message.publish', fun ?MODULE:on_message_publish/2, [Env]),
     emqx:hook('message.deliver', fun ?MODULE:on_message_deliver/3, [Env]),
     emqx:hook('message.acked', fun ?MODULE:on_message_acked/3, [Env]),
     emqx:hook('message.dropped', fun ?MODULE:on_message_dropped/3, [Env]).
