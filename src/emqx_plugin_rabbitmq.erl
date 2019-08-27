@@ -38,8 +38,16 @@
         , on_message_dropped/3
         ]).
 
+-import(emqx_plugin_rabbitmq_cli, [ensure_exchange/1, publish/3]).
+-import(bson_binary, [put_document/1]).
+
 %% Called when the plugin application start
 load(Env) ->
+
+    {ok, ExchangeName} = application:get_env(?APP, hook_rabbitmq_exchange),
+    io:format("ExchangeName (load): ~s~n", [ExchangeName]),
+    %% emqx_plugin_rabbitmq_cli:ensure_exchange(ExchangeName),
+
     emqx:hook('client.authenticate', fun ?MODULE:on_client_authenticate/2, [Env]),
     emqx:hook('client.check_acl', fun ?MODULE:on_client_check_acl/5, [Env]),
     emqx:hook('client.connected', fun ?MODULE:on_client_connected/4, [Env]),
