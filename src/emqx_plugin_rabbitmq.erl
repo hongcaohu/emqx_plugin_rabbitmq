@@ -127,7 +127,8 @@ on_session_terminated(#{client_id := ClientId}, ReasonCode, _Env) ->
 on_message_publish(Message = #message{topic = <<"$SYS/", _/binary>>}, _Env) ->
     {ok, Message};
 
-on_message_publish(Message, ExchangeName) ->
+on_message_publish(Message, _Env) ->
+    {ok, ExchangeName} = application:get_env(?APP, hook_rabbitmq_exchangeName),
     io:format("Publish ~s~n", [emqx_message:format(Message)]),
     % {ok, Payload} = format_payload(Message),
     emqx_plugin_rabbitmq_cli:publish(ExchangeName, <<"Content">>, <<"bridge.aws.topic2.test">>),
