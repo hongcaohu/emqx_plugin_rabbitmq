@@ -45,9 +45,19 @@
 %% Called when the plugin application start
 load(Env) ->
 
+
     {ok, ExchangeName} = application:get_env(?APP, hook_rabbitmq_exchange),
     io:format("ExchangeName (load): ~s~n", [ExchangeName]),
-    emqx_plugin_rabbitmq_cli:ensure_exchange(ExchangeName),
+    io:format("emqx_message:format(Env) ~s~n", [emqx_message:format(Env)]),
+    AmqpOpts = [%% Pool Size
+          {pool_size, 10},
+          {host, "47.99.55.196"},
+          {port, 5672},
+          {username, "admin"},
+          {password, "123456"}],
+
+    ecpool:start_pool(amqp_pool, emqx_plugin_rabbitmq_cli, AmqpOpts),
+    % emqx_plugin_rabbitmq_cli:ensure_exchange(ExchangeName),
 
     emqx:hook('client.authenticate', fun ?MODULE:on_client_authenticate/2, [Env]),
     emqx:hook('client.check_acl', fun ?MODULE:on_client_check_acl/5, [Env]),
