@@ -129,9 +129,9 @@ on_message_publish(Message = #message{topic = <<"$SYS/", _/binary>>}, _Env) ->
 
 on_message_publish(Message, ExchangeName) ->
     io:format("Publish ~s~n", [emqx_message:format(Message)]),
-    {ok, Payload} = format_payload(Message),
-    emqx_plugin_rabbitmq_cli:publish(ExchangeName, Payload, <<"bridge.aws.topic2.test">>),
-    ok.
+    % {ok, Payload} = format_payload(Message),
+    emqx_plugin_rabbitmq_cli:publish(ExchangeName, <<"Content">>, <<"bridge.aws.topic2.test">>),
+    {ok, Message}.
 
 format_payload(Message) ->
     Username = emqx_message:get_header(username, Message),
