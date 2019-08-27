@@ -34,14 +34,16 @@ publish(ExchangeName, Payload, RoutingKey) ->
 
 publish(ExchangeName, Message, RoutingKey, Conn) ->
   io:format("public method invoked ..."),
+  
   {ok, MessageBody} = emqx_json:safe_encode(Message),
   MessageBody64 = base64:encode_to_string(MessageBody),
   Payload = iolist_to_binary(MessageBody),
-  io:format("public method invoked 2 ..."),
+  io:format("Payload: ~p", [Payload]),
+
   {ok, Channel} = amqp_connection:open_channel(Conn),
   Publish = #'basic.publish'{exchange = ExchangeName, routing_key = RoutingKey},
   Props = #'P_basic'{delivery_mode = 2},
-  Msg = #amqp_msg{props = Props, payload = Payload},
+  Msg = #amqp_msg{props = Props, payload = <<"ABCDEFG">>},
   amqp_channel:cast(Channel, Publish, Msg),
   amqp_channel:close(Channel).
 
