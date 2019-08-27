@@ -60,14 +60,6 @@ load(Env) ->
     {ok, ExchangeName} = application:get_env(?APP, hook_rabbitmq_exchangeName),
     {ok, Prefer_ipv6} = application:get_env(?APP, hook_rabbitmq_prefer_ipv6),
 
-    io:format("Host(~s) ~n", [Host]),
-    % io:format("Port(~s) ~n", [Port]),
-    % io:format("PoolSize(~s) ~n", [PoolSize]),
-    io:format("UserName(~s) ~n", [UserName]),
-    io:format("Password(~s) ~n", [Password]),
-    io:format("ExchangeName(~s) ~n", [ExchangeName]),
-    % io:format("Prefer_ipv6(~s) ~n", [Prefer_ipv6]),
-
     AmqpOpts = [
           {pool_size, PoolSize},
           {host, Host},
@@ -135,24 +127,40 @@ on_session_terminated(#{client_id := ClientId}, ReasonCode, _Env) ->
 on_message_publish(Message = #message{topic = <<"$SYS/", _/binary>>}, _Env) ->
     {ok, Message};
 
-on_message_publish(Message = #message{topic = Topic, flags = #{retain := Retain}}, ExchangeName) ->
+on_message_publish(Message, ExchangeName) ->
     io:format("Publish ~s~n", [emqx_message:format(Message)]),
-    Username = case maps:find(username, Message#message.headers) of
-                {ok, Value} -> Value;
-                _ -> undefined
-                end,
-    io:format("Publish Username:(~s)~n", [Username]),
-    Doc = {
-        client_id, Message#message.from,
-        username, Username,
-        topic, Topic,
-        qos, Message#message.qos,
-        retained, Retain,
-        payload, {bin, bin, Message#message.payload},
-        published_at, emqx_time:now_ms(Message#message.timestamp)
-    },
-    emqx_rabbitmq_hook_cli:publish(ExchangeName, bson_binary:put_document(Doc), <<"bridge.aws.topic2.test">>),
-    {ok, Message}.
+    {ok, Payload} = format_payload(Message),
+    emqx_rabbitmq_hook_cli:publish(ExchangeName, Payload, <<"bridge.aws.topic2.test">>),
+    ok.
+
+format_payload(Message) ->
+    Username = emqx_message:get_header(username, Message),
+
+    Topic = Message#message.topic,
+    Tail = string:right(binary_to_list(Topic), 4),
+    RawType = string:equal(Tail, <<"_raw">>),
+    % io:format("Tail= ~s , RawType= ~s~n",[Tail,RawType]),
+
+    MsgPayload = Message#message.payload,
+    % io:format("MsgPayload : ~s~n", [MsgPayload]),
+
+    if
+        RawType == true ->
+            MsgPayload64 = list_to_binary(base64:encode_to_string(MsgPayload));
+    % io:format("MsgPayload64 : ~s~n", [MsgPayload64]);
+        RawType == false ->
+            MsgPayload64 = MsgPayload
+    end,
+
+
+    Payload = [{action, message_publish},
+        {device_id, Message#message.from},
+        {username, Username},
+        {topic, Topic},
+        {payload, MsgPayload64},
+        {ts, emqx_time:now_secs(Message#message.timestamp)}],
+
+    {ok, Payload}.
 
 on_message_deliver(#{client_id := ClientId}, Message, _Env) ->
     io:format("Deliver message to client(~s): ~s~n", [ClientId, emqx_message:format(Message)]),
