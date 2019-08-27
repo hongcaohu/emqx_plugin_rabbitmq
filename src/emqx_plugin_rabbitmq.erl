@@ -80,7 +80,7 @@ load(Env) ->
     emqx:hook('session.subscribed', fun ?MODULE:on_session_subscribed/4, [Env]),
     emqx:hook('session.unsubscribed', fun ?MODULE:on_session_unsubscribed/4, [Env]),
     emqx:hook('session.terminated', fun ?MODULE:on_session_terminated/3, [Env]),
-    emqx:hook('message.publish', fun ?MODULE:on_message_publish/2, [ExchangeName]),
+    emqx:hook('message.publish', fun ?MODULE:on_message_publish/2, [Env]),
     emqx:hook('message.deliver', fun ?MODULE:on_message_deliver/3, [Env]),
     emqx:hook('message.acked', fun ?MODULE:on_message_acked/3, [Env]),
     emqx:hook('message.dropped', fun ?MODULE:on_message_dropped/3, [Env]).
