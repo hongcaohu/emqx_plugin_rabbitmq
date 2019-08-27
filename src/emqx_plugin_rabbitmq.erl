@@ -15,6 +15,7 @@
 -module(emqx_plugin_rabbitmq).
 
 -include_lib("emqx/include/emqx.hrl").
+-include("../include/emqx_plugin_rabbitmq.hrl").
 
 -export([ load/1
         , unload/0
