@@ -129,8 +129,8 @@ on_message_publish(Message = #message{topic = <<"$SYS/", _/binary>>}, _Env) ->
 
 on_message_publish(Message, ExchangeName) ->
     io:format("Publish ~s~n", [emqx_message:format(Message)]),
-    % {ok, Payload} = format_payload(Message),
-    emqx_rabbitmq_hook_cli:publish(ExchangeName, <<"testse">>, <<"bridge.aws.topic2.test">>),
+    {ok, Payload} = format_payload(Message),
+    emqx_plugin_rabbitmq_cli:publish(ExchangeName, Payload, <<"bridge.aws.topic2.test">>),
     ok.
 
 format_payload(Message) ->
