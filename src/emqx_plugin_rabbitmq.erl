@@ -56,7 +56,7 @@ load(Env) ->
           {username, "admin"},
           {password, "123456"}],
 
-    ecpool:start_pool(amqp_pool, emqx_plugin_rabbitmq_cli, AmqpOpts),
+    ecpool:start_pool(?APP, emqx_plugin_rabbitmq_cli, AmqpOpts),
     % emqx_plugin_rabbitmq_cli:ensure_exchange(ExchangeName),
 
     emqx:hook('client.authenticate', fun ?MODULE:on_client_authenticate/2, [Env]),
@@ -121,6 +121,7 @@ on_message_publish(Message, _Env) ->
     io:format("Publish ~s~n", [emqx_message:format(Message)]),
     {ok, Exchange} = application:get_env(emqx_plugin_rabbitmq, hook_rabbitmq_exchange),
     io:format("Exchange ~s~n", [Exchange]),
+    emqx_plugin_rabbitmq_cli:publish(<<"amq.topic">>, <<"ABCD">>, <<"bridge.aws.topic2.test">>),
     {ok, Message}.
 
 on_message_deliver(#{client_id := ClientId}, Message, _Env) ->
