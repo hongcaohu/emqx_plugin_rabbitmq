@@ -60,6 +60,14 @@ load(Env) ->
     {ok, ExchangeName} = application:get_env(?APP, hook_rabbitmq_exchangeName),
     {ok, Prefer_ipv6} = application:get_env(?APP, hook_rabbitmq_prefer_ipv6),
 
+    io:format("Host(~s) ~n", [Host]),
+    % io:format("Port(~s) ~n", [Port]),
+    % io:format("PoolSize(~s) ~n", [PoolSize]),
+    io:format("UserName(~s) ~n", [UserName]),
+    io:format("Password(~s) ~n", [Password]),
+    io:format("ExchangeName(~s) ~n", [ExchangeName]),
+    % io:format("Prefer_ipv6(~s) ~n", [Prefer_ipv6]),
+
     AmqpOpts = [
           {pool_size, PoolSize},
           {host, Host},
@@ -128,10 +136,12 @@ on_message_publish(Message = #message{topic = <<"$SYS/", _/binary>>}, _Env) ->
     {ok, Message};
 
 on_message_publish(Message = #message{topic = Topic, flags = #{retain := Retain}}, ExchangeName) ->
+    io:format("Publish ~s~n", [emqx_message:format(Message)]),
     Username = case maps:find(username, Message#message.headers) of
                 {ok, Value} -> Value;
                 _ -> undefined
                 end,
+    io:format("Publish Username:(~s)~n", [Username]),
     Doc = {
         client_id, Message#message.from,
         username, Username,
