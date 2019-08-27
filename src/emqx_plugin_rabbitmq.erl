@@ -47,7 +47,7 @@ load(Env) ->
 
     {ok, ExchangeName} = application:get_env(?APP, hook_rabbitmq_exchange),
     io:format("ExchangeName (load): ~s~n", [ExchangeName]),
-    %% emqx_plugin_rabbitmq_cli:ensure_exchange(ExchangeName),
+    emqx_plugin_rabbitmq_cli:ensure_exchange(ExchangeName),
 
     emqx:hook('client.authenticate', fun ?MODULE:on_client_authenticate/2, [Env]),
     emqx:hook('client.check_acl', fun ?MODULE:on_client_check_acl/5, [Env]),
