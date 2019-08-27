@@ -44,20 +44,30 @@
 
 %% Called when the plugin application start
 load(Env) ->
+    % {hook_rabbitmq_host, "47.99.55.196"},
+    % {hook_rabbitmq_port, "5672"},
+    % {hook_rabbitmq_poolSize, "10"},
+    % {hook_rabbitmq_username, "admin"},
+    % {hook_rabbitmq_password, "123456"},
+    % {hook_rabbitmq_exchangeName, "amq_topic"},
+    % {hook_rabbitmq_prefer_ipv6, false}
 
+    {ok, Host} = application:get_env(?APP, hook_rabbitmq_host),
+    {ok, Port} = application:get_env(?APP, hook_rabbitmq_port),
+    {ok, PoolSize} = application:get_env(?APP, hook_rabbitmq_poolSize),
+    {ok, UserName} = application:get_env(?APP, hook_rabbitmq_username),
+    {ok, Password} = application:get_env(?APP, hook_rabbitmq_password),
+    {ok, ExchangeName} = application:get_env(?APP, hook_rabbitmq_exchangeName),
+    {ok, Prefer_ipv6} = application:get_env(?APP, hook_rabbitmq_prefer_ipv6),
 
-    {ok, ExchangeName} = application:get_env(?APP, hook_rabbitmq_exchange),
-    io:format("ExchangeName (load): ~s~n", [ExchangeName]),
-    %% io:format("emqx_message:format(Env) ~s~n", [emqx_message:format(Env)]),
-    AmqpOpts = [%% Pool Size
-          {pool_size, 10},
-          {host, "47.99.55.196"},
-          {port, 5672},
-          {username, <<"admin">>},
-          {password, <<"123456">>}],
+    AmqpOpts = [
+          {pool_size, PoolSize},
+          {host, Host},
+          {port, Port},
+          {username, UserName},
+          {password, Password}],
 
     ecpool:start_pool(?APP, emqx_plugin_rabbitmq_cli, AmqpOpts),
-    emqx_plugin_rabbitmq_cli:ensure_exchange(ExchangeName),
 
     emqx:hook('client.authenticate', fun ?MODULE:on_client_authenticate/2, [Env]),
     emqx:hook('client.check_acl', fun ?MODULE:on_client_check_acl/5, [Env]),
@@ -70,7 +80,7 @@ load(Env) ->
     emqx:hook('session.subscribed', fun ?MODULE:on_session_subscribed/4, [Env]),
     emqx:hook('session.unsubscribed', fun ?MODULE:on_session_unsubscribed/4, [Env]),
     emqx:hook('session.terminated', fun ?MODULE:on_session_terminated/3, [Env]),
-    %% emqx:hook('message.publish', fun ?MODULE:on_message_publish/2, [Env]),
+    emqx:hook('message.publish', fun ?MODULE:on_message_publish/2, [ExchangeName]),
     emqx:hook('message.deliver', fun ?MODULE:on_message_deliver/3, [Env]),
     emqx:hook('message.acked', fun ?MODULE:on_message_acked/3, [Env]),
     emqx:hook('message.dropped', fun ?MODULE:on_message_dropped/3, [Env]).
@@ -117,11 +127,21 @@ on_session_terminated(#{client_id := ClientId}, ReasonCode, _Env) ->
 on_message_publish(Message = #message{topic = <<"$SYS/", _/binary>>}, _Env) ->
     {ok, Message};
 
-on_message_publish(Message, _Env) ->
-    io:format("Publish ~s~n", [emqx_message:format(Message)]),
-    {ok, Exchange} = application:get_env(emqx_plugin_rabbitmq, hook_rabbitmq_exchange),
-    io:format("Exchange ~s~n", [Exchange]),
-    emqx_plugin_rabbitmq_cli:publish(<<"amq.topic">>, <<"ABCD">>, <<"bridge.aws.topic2.test">>),
+on_message_publish(Message = #message{topic = Topic, flags = #{retain := Retain}}, ExchangeName) ->
+    Username = case maps:find(username, Message#message.headers) of
+                {ok, Value} -> Value;
+                _ -> undefined
+                end,
+    Doc = {
+        client_id, Message#message.from,
+        username, Username,
+        topic, Topic,
+        qos, Message#message.qos,
+        retained, Retain,
+        payload, {bin, bin, Message#message.payload},
+        published_at, emqx_time:now_ms(Message#message.timestamp)
+    },
+    emqx_rabbitmq_hook_cli:publish(ExchangeName, bson_binary:put_document(Doc), <<"bridge.aws.topic2.test">>),
     {ok, Message}.
 
 on_message_deliver(#{client_id := ClientId}, Message, _Env) ->
