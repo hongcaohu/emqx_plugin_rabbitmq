@@ -67,7 +67,7 @@ load(Env) ->
           {password, Password},
           {pool_size, PoolSize}],
 
-    ecpool:start_pool(?APP, emqx_plugin_rabbitmq_cli, AmqpOpts),
+    ecpool:start_pool(rabbitmq_pool, emqx_plugin_rabbitmq_cli, AmqpOpts),
 
     emqx:hook('client.authenticate', fun ?MODULE:on_client_authenticate/2, [Env]),
     emqx:hook('client.check_acl', fun ?MODULE:on_client_check_acl/5, [Env]),

@@ -30,7 +30,7 @@ ensure_exchange(ExchangeName, Conn) ->
   amqp_channel:close(Channel).
 
 publish(ExchangeName, Payload, RoutingKey) ->
-  ecpool:with_client(?APP, fun(C) -> publish(ExchangeName, Payload, RoutingKey, C) end).
+  ecpool:with_client(rabbitmq_pool, fun(C) -> publish(ExchangeName, Payload, RoutingKey, C) end).
 
 publish(ExchangeName, Payload, RoutingKey, Conn) ->
   io:format("public method invoked ..."),
