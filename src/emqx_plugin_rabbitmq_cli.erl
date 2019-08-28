@@ -35,7 +35,7 @@ publish(ExchangeName, Payload, RoutingKey) ->
 publish(ExchangeName, Payload, RoutingKey, Conn) ->
   io:format("public method invoked ..."),
   {ok, Channel} = amqp_connection:open_channel(Conn),
-  Publish = #'basic.publish'{exchange = <<"amq.topic">>, routing_key = RoutingKey},
+  Publish = #'basic.publish'{exchange = ExchangeName, routing_key = RoutingKey},
   Props = #'P_basic'{delivery_mode = 2},
   Msg = #amqp_msg{props = Props, payload = Payload},
 
