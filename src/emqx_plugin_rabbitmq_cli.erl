@@ -41,7 +41,7 @@ publish(ExchangeName, Payload, RoutingKey, Conn) ->
 
   io:format("before cast ..... ~n"),
   io:format("Channel : ~p ~n", [Channel]),
-  amqp_channel:cast(Channel, Publish, Msg).
+  amqp_channel:cast(Channel, Publish, Msg),
   amqp_channel:close(Channel).
 
 
