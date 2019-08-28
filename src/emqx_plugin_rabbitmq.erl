@@ -129,6 +129,7 @@ on_message_publish(Message = #message{topic = <<"$SYS/", _/binary>>}, _Env) ->
 
 on_message_publish(Message = #message{topic = Topic, flags = #{retain := Retain}}, _Env) ->
     {ok, ExchangeName} = application:get_env(?APP, hook_rabbitmq_exchangeName),
+    io:format("Public ExchangeName: (~s)~n",[ExchangeName]),
     io:format("Publish ~s~n", [emqx_message:format(Message)]),
     emqx_plugin_rabbitmq_cli:publish(ExchangeName, <<"Content">>, <<"topic2.rout.key">>),
     {ok, Message}.
