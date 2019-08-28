@@ -38,7 +38,7 @@ publish(ExchangeName, Payload, RoutingKey, Conn) ->
   Publish = #'basic.publish'{exchange = ExchangeName, routing_key = RoutingKey},
   Props = #'P_basic'{delivery_mode = 2},
   Msg = #amqp_msg{props = Props, payload = Payload},
-  amqp_channel:cast(Channel, Publish, Msg),
-  amqp_channel:close(Channel).
+  amqp_channel:cast(Channel, Publish, Msg).
+  %% amqp_channel:close(Channel).
 
 
