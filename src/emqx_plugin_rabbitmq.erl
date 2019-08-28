@@ -131,7 +131,8 @@ on_message_publish(Message = #message{topic = Topic, flags = #{retain := Retain}
     {ok, ExchangeName} = application:get_env(?APP, hook_rabbitmq_exchangeName),
     io:format("Public ExchangeName: (~s)~n",[ExchangeName]),
     io:format("Publish ~s~n", [emqx_message:format(Message)]),
-    emqx_plugin_rabbitmq_cli:publish(ExchangeName, <<"Content">>, <<"topic2.rout.key">>),
+    {ok, Payload} = format_payload(Message),
+    emqx_plugin_rabbitmq_cli:publish(<<"amq.topic">>, Payload, <<"topic2.rout.key">>),
     {ok, Message}.
 
 on_message_deliver(#{client_id := ClientId}, Message, _Env) ->
@@ -167,3 +168,32 @@ unload() ->
     emqx:unhook('message.acked', fun ?MODULE:on_message_acked/3),
     emqx:unhook('message.dropped', fun ?MODULE:on_message_dropped/3).
 
+
+format_payload(Message) ->
+    Username = emqx_message:get_header(username, Message),
+
+    Topic = Message#message.topic,
+    Tail = string:right(binary_to_list(Topic), 4),
+    RawType = string:equal(Tail, <<"_raw">>),
+    io:format("Tail= ~s , RawType= ~s~n",[Tail,RawType]),
+
+    MsgPayload = Message#message.payload,
+    io:format("MsgPayload : ~s~n", [MsgPayload]),
+
+    if
+        RawType == true ->
+            MsgPayload64 = list_to_binary(base64:encode_to_string(MsgPayload));
+    % io:format("MsgPayload64 : ~s~n", [MsgPayload64]);
+        RawType == false ->
+            MsgPayload64 = MsgPayload
+    end,
+
+
+    Payload = [{action, message_publish},
+        {device_id, Message#message.from},
+        {username, Username},
+        {topic, Topic},
+        {payload, MsgPayload64},
+        {ts, emqx_time:now_secs(Message#message.timestamp)}],
+
+    {ok, Payload}.
