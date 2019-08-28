@@ -35,13 +35,13 @@ publish(ExchangeName, Payload, RoutingKey) ->
 publish(ExchangeName, Payload, RoutingKey, Conn) ->
   io:format("public method invoked ..."),
   {ok, Channel} = amqp_connection:open_channel(Conn),
-  Publish = #'basic.publish'{exchange = <<"amq.topic">>, routing_key = <<"topic2.rout.key">>},
+  Publish = #'basic.publish'{exchange = <<"amq.topic">>, routing_key = RoutingKey},
   Props = #'P_basic'{delivery_mode = 2},
   Msg = #amqp_msg{props = Props, payload = Payload},
 
   io:format("before cast ..... ~n"),
   io:format("Channel : ~p ~n", [Channel]),
   amqp_channel:cast(Channel, Publish, Msg).
-  %% amqp_channel:close(Channel).
+  amqp_channel:close(Channel).
 
 
