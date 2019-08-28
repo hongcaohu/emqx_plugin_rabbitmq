@@ -44,13 +44,13 @@
 
 %% Called when the plugin application start
 load(Env) ->
-    % {hook_rabbitmq_host, "47.99.55.196"},
-    % {hook_rabbitmq_port, "5672"},
-    % {hook_rabbitmq_poolSize, "10"},
-    % {hook_rabbitmq_username, "admin"},
-    % {hook_rabbitmq_password, "123456"},
-    % {hook_rabbitmq_exchangeName, "amq_topic"},
-    % {hook_rabbitmq_prefer_ipv6, false}
+	% {hook_rabbitmq_host, "47.99.55.196"},
+	% {hook_rabbitmq_port, 5672},
+	% {hook_rabbitmq_poolSize, 4},
+	% {hook_rabbitmq_username, <<"admin">>},
+	% {hook_rabbitmq_password, <<"123456">>},
+	% {hook_rabbitmq_exchangeName, <<"amq_topic">>},
+	% {hook_rabbitmq_prefer_ipv6, false}
 
     {ok, Host} = application:get_env(?APP, hook_rabbitmq_host),
     {ok, Port} = application:get_env(?APP, hook_rabbitmq_port),
@@ -61,11 +61,11 @@ load(Env) ->
     {ok, Prefer_ipv6} = application:get_env(?APP, hook_rabbitmq_prefer_ipv6),
 
     AmqpOpts = [
-          {pool_size, PoolSize},
           {host, Host},
           {port, Port},
           {username, UserName},
-          {password, Password}],
+          {password, Password},
+          {pool_size, PoolSize}],
 
     ecpool:start_pool(?APP, emqx_plugin_rabbitmq_cli, AmqpOpts),
 
@@ -130,38 +130,8 @@ on_message_publish(Message = #message{topic = <<"$SYS/", _/binary>>}, _Env) ->
 on_message_publish(Message = #message{topic = Topic, flags = #{retain := Retain}}, _Env) ->
     {ok, ExchangeName} = application:get_env(?APP, hook_rabbitmq_exchangeName),
     io:format("Publish ~s~n", [emqx_message:format(Message)]),
-    % {ok, Payload} = format_payload(Message),
     emqx_plugin_rabbitmq_cli:publish(ExchangeName, <<"Content">>, <<"topic2.rout.key">>),
     {ok, Message}.
-
-format_payload(Message) ->
-    Username = emqx_message:get_header(username, Message),
-
-    Topic = Message#message.topic,
-    Tail = string:right(binary_to_list(Topic), 4),
-    RawType = string:equal(Tail, <<"_raw">>),
-    io:format("Tail= ~s , RawType= ~s~n",[Tail,RawType]),
-
-    MsgPayload = Message#message.payload,
-    io:format("MsgPayload : ~s~n", [MsgPayload]),
-
-    if
-        RawType == true ->
-            MsgPayload64 = list_to_binary(base64:encode_to_string(MsgPayload));
-    % io:format("MsgPayload64 : ~s~n", [MsgPayload64]);
-        RawType == false ->
-            MsgPayload64 = MsgPayload
-    end,
-
-
-    Payload = [{action, message_publish},
-        {device_id, Message#message.from},
-        {username, Username},
-        {topic, Topic},
-        {payload, MsgPayload64},
-        {ts, emqx_time:now_secs(Message#message.timestamp)}],
-
-    {ok, Payload}.
 
 on_message_deliver(#{client_id := ClientId}, Message, _Env) ->
     io:format("Deliver message to client(~s): ~s~n", [ClientId, emqx_message:format(Message)]),

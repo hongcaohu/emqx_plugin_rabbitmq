@@ -32,18 +32,12 @@ ensure_exchange(ExchangeName, Conn) ->
 publish(ExchangeName, Payload, RoutingKey) ->
   ecpool:with_client(?APP, fun(C) -> publish(ExchangeName, Payload, RoutingKey, C) end).
 
-publish(ExchangeName, Message, RoutingKey, Conn) ->
+publish(ExchangeName, Payload, RoutingKey, Conn) ->
   io:format("public method invoked ..."),
-  
-  % {ok, MessageBody} = emqx_json:safe_encode(Message),
-  % MessageBody64 = base64:encode_to_string(MessageBody),
-  % Payload = iolist_to_binary(MessageBody),
-  % io:format("Payload: ~p", [Payload]),
-
   {ok, Channel} = amqp_connection:open_channel(Conn),
   Publish = #'basic.publish'{exchange = ExchangeName, routing_key = RoutingKey},
   Props = #'P_basic'{delivery_mode = 2},
-  Msg = #amqp_msg{props = Props, payload = Message},
+  Msg = #amqp_msg{props = Props, payload = Payload},
   amqp_channel:cast(Channel, Publish, Msg),
   amqp_channel:close(Channel).
 
